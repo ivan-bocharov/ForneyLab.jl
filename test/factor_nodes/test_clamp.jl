@@ -57,7 +57,7 @@ end
     nd = g.nodes[:placeholder_y]
 
     @test isa(nd, Clamp)
-    @test g.placeholders[nd] == (:y, 0)
+    @test g.placeholders[nd] == (:y, ())
 
     # Placeholder without explicit variable initialization
     g = FactorGraph()
@@ -67,9 +67,9 @@ end
 
     @test length(g.variables) == 1
     @test isa(nd, Clamp)
-    @test g.placeholders[nd] == (:y, 0)
+    @test g.placeholders[nd] == (:y, ())
 
-    # Indexed placeholder
+    # Placeholder indexed by Int
     g = FactorGraph()
 
     var_i = Variable(id=:y)
@@ -77,7 +77,27 @@ end
     nd_i = g.nodes[:placeholder_y]
 
     @test isa(nd_i, Clamp)
-    @test g.placeholders[nd_i] == (:y, 1)
+    @test g.placeholders[nd_i] == (:y, (1,))
+
+    # Placeholder indexed by a Tuple
+    g = FactorGraph()
+
+    var_i = Variable(id=:y)
+    placeholder(var_i, :y, index=(1,1))
+    nd_i = g.nodes[:placeholder_y]
+
+    @test isa(nd_i, Clamp)
+    @test g.placeholders[nd_i] == (:y, (1,1))
+
+    # Placeholder indexed by a Tuple with a colon
+    g = FactorGraph()
+
+    var_i = Variable(id=:y)
+    placeholder(var_i, :y, index=(:,1))
+    nd_i = g.nodes[:placeholder_y]
+
+    @test isa(nd_i, Clamp)
+    @test g.placeholders[nd_i] == (:y, (Colon(),1))
 end
 
 

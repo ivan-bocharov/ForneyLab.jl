@@ -16,7 +16,7 @@ mutable struct FactorGraph
     edges::Vector{Edge}
     variables::Dict{Symbol, Variable}
     counters::Dict{String, Int} # Counters for automatic node id assignments
-    placeholders::Dict{Clamp, Tuple{Symbol, Int}}
+    placeholders::Dict{Clamp, Tuple{Symbol, Tuple}}
 end
 
 """

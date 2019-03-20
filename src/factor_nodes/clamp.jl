@@ -81,7 +81,7 @@ as a data placeholder with the current graph.
 """
 function placeholder(   var::Variable,
                         buffer_id::Symbol;
-                        index::Int=0,
+                        index::Union{Int,Tuple,Nothing}=nothing,
                         default::Any=nothing,
                         datatype::DataType=Float64,
                         dims::Tuple=())
@@ -98,6 +98,12 @@ function placeholder(   var::Variable,
         value = zeros(datatype, dims)
     end
 
+    if index == nothing
+        index = ()
+    elseif isa(index, Int)
+        index = (index,)
+    end
+
     node = Clamp(var, value, id=constant_id)
     current_graph.placeholders[node] = (buffer_id, index)
 
@@ -105,7 +111,7 @@ function placeholder(   var::Variable,
 end
 
 function placeholder(   buffer_id::Symbol;
-                        index::Int=0,
+                        index::Union{Int,Tuple,Nothing}=nothing,
                         default::Any=nothing,
                         datatype::DataType=Float64,
                         dims::Tuple=(),

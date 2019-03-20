@@ -161,10 +161,10 @@ function messageString(node::Clamp{T}) where T<:VariateType
     if node in keys(ForneyLab.current_graph.placeholders)
         # Message comes from data array
         buffer, idx = ForneyLab.current_graph.placeholders[node]
-        if idx > 0
-            str = "Message($(var_type_str), PointMass, m=data[:$buffer][$idx])"
-        else
+        if idx == ()
             str = "Message($(var_type_str), PointMass, m=data[:$buffer])"
+        else
+            str = "Message($(var_type_str), PointMass, m=data[:$buffer][$idx...])"
         end
     else
         # Insert constant

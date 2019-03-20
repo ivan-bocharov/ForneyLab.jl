@@ -25,7 +25,7 @@ end
     @test isa(g.edges, Vector{Edge})
     @test isa(g.variables, Dict{Symbol, Variable})
     @test isa(g.counters, Dict{String, Int})
-    @test isa(g.placeholders, Dict{Clamp, Tuple{Symbol, Int}})
+    @test isa(g.placeholders, Dict{Clamp, Tuple{Symbol, Tuple}})
 
     # currentGraph() should point to the current graph
     @test ===(currentGraph(), g)
