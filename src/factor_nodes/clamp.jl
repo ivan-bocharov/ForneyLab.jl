@@ -75,6 +75,9 @@ as a data placeholder with the current graph.
     # Specify the data type by passing a default value for the Clamp.
     placeholder(y, :y, index=3, default=0.0)
 
+    # Link variable y to index (3,:) of buffer with id :y.
+    placeholder(y, :y, index=(3,:))
+
     # Indicate that the Clamp will hold an array of size `dims`,
     # with Float64 elements.
     placeholder(X, :X, datatype=Float64, dims=(3,2))
