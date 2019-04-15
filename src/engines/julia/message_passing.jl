@@ -164,7 +164,7 @@ function messageString(node::Clamp{T}) where T<:VariateType
         if idx == ()
             str = "Message($(var_type_str), PointMass, m=data[:$buffer])"
         else
-            str = "Message($(var_type_str), PointMass, m=data[:$buffer][$idx...])"
+            str = "Message($(var_type_str), PointMass, m=data[:$buffer][$(join(idx,", "))])"
         end
     else
         # Insert constant
@@ -194,7 +194,7 @@ function marginalString(node::Clamp{T}) where T<:VariateType
         if idx == ()
             str = "ProbabilityDistribution($(var_type_str), PointMass, m=data[:$buffer])"
         else
-            str = "ProbabilityDistribution($(var_type_str), PointMass, m=data[:$buffer][$idx...])"
+            str = "ProbabilityDistribution($(var_type_str), PointMass, m=data[:$buffer][$(join(idx,", "))])"
         end
     else
         # Insert constant
