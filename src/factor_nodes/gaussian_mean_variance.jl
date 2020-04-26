@@ -1,6 +1,4 @@
-export NormalMV
-
-abstract type Gaussian <: SoftFactor end
+export NormalMV, NormalWMP, NormalMP, prod!
 
 """
 Description:
@@ -23,6 +21,38 @@ struct NormalMV <: ContinuousUnivariateDistribution
     m::Float64
     V::Float64
 end
+
+struct NormalWMP <: ContinuousUnivariateDistribution
+    xi::Float64
+    w::Float64
+end
+
+struct NormalMP <: ContinuousUnivariateDistribution
+    m::Float64
+    T::Float64
+end
+
+function convert(::NormalWMP, dist::NormalMV)
+    w = cholinv(dist.V)
+    xi = w*dist.m
+
+    return NormalMV(xi, w)
+end
+
+weightedMean(x::NormalWMP) = x.xi
+precision(x::NormalWMP) = x.w
+mean(x::NormalWMP) = cholinv(x.w)*x.xi
+var(x::NormalWMP) =  1.0/x.w
+
+function prod!(
+    x::NormalMV,
+    y::NormalMV,
+    z::NormalWMP=NormalWMP(0.0, 1.0))
+
+    return NormalWMP(weightedMean(x) + weightedMean(y), precision(x) + precision(y))
+end
+
+
 
 # mutable struct GaussianMeanVariance <: Gaussian
 #     id::Symbol
@@ -66,9 +96,9 @@ end
 
 # unsafeMeanCov(dist::ProbabilityDistribution{V, GaussianMeanVariance}) where V<:VariateType = (deepcopy(dist.params[:m]), deepcopy(dist.params[:v]))
 
-# unsafeWeightedMean(dist::ProbabilityDistribution{V, GaussianMeanVariance}) where V<:VariateType = cholinv(dist.params[:v])*dist.params[:m]
+weightedMean(dist::NormalMV) = cholinv(dist.V)*dist.m
 
-# unsafePrecision(dist::ProbabilityDistribution{V, GaussianMeanVariance}) where V<:VariateType = cholinv(dist.params[:v])
+precision(dist::NormalMV) = cholinv(dist.V)
 
 # logPdf(dist::ProbabilityDistribution{Univariate, GaussianMeanVariance},x) = -0.5*(log(2pi)+log(dist.params[:v]) + (x-dist.params[:m])^2/dist.params[:v])
 # logPdf(dist::ProbabilityDistribution{Multivariate, GaussianMeanVariance},x) = -0.5*(dims(dist)*log(2pi) + log(det(dist.params[:v])) + transpose(x-dist.params[:m])*inv(dist.params[:v])*(x-dist.params[:m]))

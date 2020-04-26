@@ -12,6 +12,10 @@ struct Message{family<:Distribution} # Note that parameter order is switched w.r
     Message{F}(dist::F) where {F<:Distribution}= new(dist)# Constructor for unspecified scaling factor
 end
 
+function Message(dist::F) where F<:Distribution
+    return Message{F}(dist)
+end
+
 family(msg_type::Type{Message{F}}) where F<:Distribution = F
 
 function show(io::IO, msg::Message)
@@ -27,6 +31,7 @@ matches(::Type{T}, ::Type{T}) where T<:Message = true
 matches(Ta::Type{Message{Da}}, Tb::Type{Message{Db}}) where {Da<:Distribution, Db<:Distribution} = (Fa<:Fb)
 matches(::Type{P}, ::Type{M}) where {P<:Distribution, M<:Message} = false
 matches(::Type{M}, ::Type{P}) where {P<:Distribution, M<:Message} = false
+matches(::Type{Nothing}, ::Type{T}) where T<:Message = false
 
 function ==(t::Message{fam_t}, u::Message{fam_u}) where {fam_t<:Distribution, fam_u<:Distribution}
     (fam_t == fam_u) || return false

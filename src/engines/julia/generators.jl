@@ -233,11 +233,10 @@ function inboundSourceCode(inbound::Dict) # Custom inbound
 
     return inbound_code
 end
-function inboundSourceCode(inbound::Clamp{V}) where V<:VariateType # Buffer or value inbound
+function inboundSourceCode(inbound::Clamp) # Buffer or value inbound
     dist_or_msg_code = removePrefix(inbound.dist_or_msg)
-    variate_type_code = removePrefix(V)
-
-    inbound_code = "$dist_or_msg_code($variate_type_code, PointMass, m="
+    
+    inbound_code = "$dist_or_msg_code(PointMass("
     if isdefined(inbound, :buffer_id)
         # Inbound is read from buffer
         inbound_code *= "data[:$(inbound.buffer_id)]"
@@ -248,7 +247,7 @@ function inboundSourceCode(inbound::Clamp{V}) where V<:VariateType # Buffer or v
         # Inbound is read from clamp node value
         inbound_code *= valueSourceCode(inbound.value)
     end
-    inbound_code *= ")"
+    inbound_code *= "))"
 
     return inbound_code
 end

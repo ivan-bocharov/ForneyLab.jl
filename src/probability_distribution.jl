@@ -37,8 +37,8 @@ variateType(dist::ProbabilityDistribution{V, F}) where {V<:VariateType, F<:Facto
 
 show(io::IO, dist::ProbabilityDistribution) = println(io, format(dist))
 
-matches(Ta::Type{Pa}, Tb::Type{Pb}) where {Pa<:ProbabilityDistribution, Pb<:ProbabilityDistribution} = (Pa<:Pb)
-matches(::Type{Nothing}, ::Type{T}) where T<:ProbabilityDistribution = false
+matches(Ta::Type{Pa}, Tb::Type{Pb}) where {Pa<:Distribution, Pb<:Distribution} = (Pa<:Pb)
+matches(::Type{Nothing}, ::Type{T}) where T<:Distribution = false
 
 mean(dist::ProbabilityDistribution) = isProper(dist) ? unsafeMean(dist) : error("mean($(dist)) is undefined because the distribution is improper.")
 mode(dist::ProbabilityDistribution) = isProper(dist) ? unsafeMode(dist) : error("mode($(dist)) is undefined because the distribution is improper.")

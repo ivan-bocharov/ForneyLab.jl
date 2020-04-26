@@ -30,8 +30,8 @@ mutable struct Clamp <: DeltaFactor
 
     Clamp() = new() # Instantiate an empty clamp without adding it to the graph
 
-    function Clamp(out::Variable, value::Any; id=generateId(Clamp{variateType(value)}))
-        self = (id, Array{Interface}(undef, 1), Dict{Symbol,Interface}(), value)
+    function Clamp(out::Variable, value::Any; id=generateId(Clamp))
+        self = new(id, Array{Interface}(undef, 1), Dict{Symbol,Interface}(), value)
         addNode!(currentGraph(), self)
         self.i[:out] = self.interfaces[1] = associate!(Interface(self), out)
 
