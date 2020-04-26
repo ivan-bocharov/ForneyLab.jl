@@ -1,4 +1,4 @@
-export Exponential, exp
+# export Exponential, exp
 
 """
 Description:

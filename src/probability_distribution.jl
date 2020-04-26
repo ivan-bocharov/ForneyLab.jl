@@ -51,52 +51,52 @@ logPdf(dist::ProbabilityDistribution) = isProper(dist) ? logPdf(dist) : error("l
 It never occurs in a `FactorGraph`, but it is used as a probability distribution
 type.
 """
-abstract type PointMass <: DeltaFactor end
+struct PointMass <: ContinuousUnivariateDistribution 
+    m::Float64
+end
 
 slug(::Type{PointMass}) = "δ"
 
-format(dist::ProbabilityDistribution{V, PointMass}) where V<:VariateType = "$(slug(PointMass))(m=$(format(dist.params[:m])))"
+dims(dist::Type{PointMass}) = 1
+# dims(dist::ProbabilityDistribution{Multivariate, PointMass}) = length(dist.params[:m])
+# dims(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = size(dist.params[:m])
 
-dims(dist::ProbabilityDistribution{Univariate, PointMass}) = 1
-dims(dist::ProbabilityDistribution{Multivariate, PointMass}) = length(dist.params[:m])
-dims(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = size(dist.params[:m])
+# # PointMass distribution constructors
+# ProbabilityDistribution(::Type{Univariate}, ::Type{PointMass}; m::Number=1.0) = ProbabilityDistribution{Univariate, PointMass}(Dict(:m=>m))
+# ProbabilityDistribution(::Type{PointMass}; m::Number=1.0) = ProbabilityDistribution{Univariate, PointMass}(Dict(:m=>m))
+# ProbabilityDistribution(::Type{Multivariate}, ::Type{PointMass}; m::Vector=[1.0]) = ProbabilityDistribution{Multivariate, PointMass}(Dict(:m=>m))
+# ProbabilityDistribution(::Type{MatrixVariate}, ::Type{PointMass}; m::AbstractMatrix=transpose([1.0])) = ProbabilityDistribution{MatrixVariate, PointMass}(Dict(:m=>m))
 
-# PointMass distribution constructors
-ProbabilityDistribution(::Type{Univariate}, ::Type{PointMass}; m::Number=1.0) = ProbabilityDistribution{Univariate, PointMass}(Dict(:m=>m))
-ProbabilityDistribution(::Type{PointMass}; m::Number=1.0) = ProbabilityDistribution{Univariate, PointMass}(Dict(:m=>m))
-ProbabilityDistribution(::Type{Multivariate}, ::Type{PointMass}; m::Vector=[1.0]) = ProbabilityDistribution{Multivariate, PointMass}(Dict(:m=>m))
-ProbabilityDistribution(::Type{MatrixVariate}, ::Type{PointMass}; m::AbstractMatrix=transpose([1.0])) = ProbabilityDistribution{MatrixVariate, PointMass}(Dict(:m=>m))
+# unsafeMean(dist::ProbabilityDistribution{T, PointMass}) where T<:VariateType = deepcopy(dist.params[:m])
 
-unsafeMean(dist::ProbabilityDistribution{T, PointMass}) where T<:VariateType = deepcopy(dist.params[:m])
+# unsafeMode(dist::ProbabilityDistribution{T, PointMass}) where T<:VariateType = deepcopy(dist.params[:m])
 
-unsafeMode(dist::ProbabilityDistribution{T, PointMass}) where T<:VariateType = deepcopy(dist.params[:m])
+# unsafeMeanVector(dist::ProbabilityDistribution{Univariate, PointMass}) = [dist.params[:m]]
+# unsafeMeanVector(dist::ProbabilityDistribution{Multivariate, PointMass}) = deepcopy(dist.params[:m])
 
-unsafeMeanVector(dist::ProbabilityDistribution{Univariate, PointMass}) = [dist.params[:m]]
-unsafeMeanVector(dist::ProbabilityDistribution{Multivariate, PointMass}) = deepcopy(dist.params[:m])
+# unsafeInverseMean(dist::ProbabilityDistribution{Univariate, PointMass}) = 1.0/dist.params[:m]
+# unsafeInverseMean(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = cholinv(dist.params[:m])
 
-unsafeInverseMean(dist::ProbabilityDistribution{Univariate, PointMass}) = 1.0/dist.params[:m]
-unsafeInverseMean(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = cholinv(dist.params[:m])
+# unsafeLogMean(dist::ProbabilityDistribution{Univariate, PointMass}) = log(dist.params[:m])
+# unsafeLogMean(dist::ProbabilityDistribution{Multivariate, PointMass}) = log.(dist.params[:m])
+# unsafeLogMean(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = log.(dist.params[:m])
 
-unsafeLogMean(dist::ProbabilityDistribution{Univariate, PointMass}) = log(dist.params[:m])
-unsafeLogMean(dist::ProbabilityDistribution{Multivariate, PointMass}) = log.(dist.params[:m])
-unsafeLogMean(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = log.(dist.params[:m])
+# unsafeDetLogMean(dist::ProbabilityDistribution{Univariate, PointMass}) = log(dist.params[:m])
+# unsafeDetLogMean(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = log(det(dist.params[:m]))
 
-unsafeDetLogMean(dist::ProbabilityDistribution{Univariate, PointMass}) = log(dist.params[:m])
-unsafeDetLogMean(dist::ProbabilityDistribution{MatrixVariate, PointMass}) = log(det(dist.params[:m]))
+# unsafeMirroredLogMean(dist::ProbabilityDistribution{Univariate, PointMass}) = log(1.0 - dist.params[:m])
 
-unsafeMirroredLogMean(dist::ProbabilityDistribution{Univariate, PointMass}) = log(1.0 - dist.params[:m])
+# unsafeVar(dist::ProbabilityDistribution{Univariate, PointMass}) = 0.0
+# unsafeVar(dist::ProbabilityDistribution{Multivariate, PointMass}) = zeros(dims(dist))
 
-unsafeVar(dist::ProbabilityDistribution{Univariate, PointMass}) = 0.0
-unsafeVar(dist::ProbabilityDistribution{Multivariate, PointMass}) = zeros(dims(dist))
+# unsafeCov(dist::ProbabilityDistribution{Univariate, PointMass}) = 0.0
+# unsafeCov(dist::ProbabilityDistribution{Multivariate, PointMass}) = zeros(dims(dist), dims(dist))
 
-unsafeCov(dist::ProbabilityDistribution{Univariate, PointMass}) = 0.0
-unsafeCov(dist::ProbabilityDistribution{Multivariate, PointMass}) = zeros(dims(dist), dims(dist))
+# unsafeMeanCov(dist::ProbabilityDistribution) = (unsafeMean(dist), unsafeCov(dist)) # Can be overloaded for efficiency
 
-unsafeMeanCov(dist::ProbabilityDistribution) = (unsafeMean(dist), unsafeCov(dist)) # Can be overloaded for efficiency
+# unsafeWeightedMeanPrecision(dist::ProbabilityDistribution) = (unsafeWeightedMean(dist), unsafePrecision(dist)) # Can be overloaded for efficiency
 
-unsafeWeightedMeanPrecision(dist::ProbabilityDistribution) = (unsafeWeightedMean(dist), unsafePrecision(dist)) # Can be overloaded for efficiency
-
-isProper(::ProbabilityDistribution{T, PointMass}) where T<:VariateType = true
+# isProper(::ProbabilityDistribution{T, PointMass}) where T<:VariateType = true
 
 # Probability distribution parametrized by function
 slug(::Type{Function}) = "f"
@@ -179,6 +179,8 @@ macro RV(expr_options::Expr, expr_def::Any)
     if form == 1
         # Build FactorNode constructor call
         node_expr = expr_def.args[3]
+        # Add node postfix to the distribution
+        node_expr.args[1] = node_expr.args[1]*:Node
         if isa(node_expr.args[2], Expr) && (node_expr.args[2].head == :parameters)
             node_expr.args = vcat(node_expr.args[1:2], [target_expr], node_expr.args[3:end])
         else
