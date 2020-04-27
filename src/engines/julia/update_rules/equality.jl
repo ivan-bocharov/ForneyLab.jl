@@ -1,5 +1,5 @@
 export
-ruleSPEqualityGaussian
+ruleSPEqualityFLNormal
 # ruleSPEqualityGammaWishart,
 # ruleSPEqualityBernoulli,
 # ruleSPEqualityBeta,
@@ -7,11 +7,11 @@ ruleSPEqualityGaussian
 # ruleSPEqualityDirichlet,
 # ruleSPEqualityPointMass,
 # ruleSPEqualityRGMP,
-# ruleSPEqualityGaussianRGMP
+# ruleSPEqualityFLNormalRGMP
 
-ruleSPEqualityGaussian(msg_1::Message{F1}, msg_2::Message{F2}, msg_3::Nothing) where {F1<:FLNormal, F2<:FLNormal} = Message(prod!(msg_1.dist, msg_2.dist))
-ruleSPEqualityGaussian(msg_1::Message{F1}, msg_2::Nothing, msg_3::Message{F2}) where {F1<:FLNormal, F2<:FLNormal}= Message(prod!(msg_1.dist, msg_3.dist))
-ruleSPEqualityGaussian(msg_1::Nothing, msg_2::Message{F1}, msg_3::Message{F2}) where {F1<:FLNormal, F2<:FLNormal} = Message(prod!(msg_2.dist, msg_3.dist))
+ruleSPEqualityFLNormal(msg_1::Message{F1}, msg_2::Message{F2}, msg_3::Nothing) where {F1<:FLNormal, F2<:FLNormal} = Message(prod!(msg_1.dist, msg_2.dist))
+ruleSPEqualityFLNormal(msg_1::Message{F1}, msg_2::Nothing, msg_3::Message{F2}) where {F1<:FLNormal, F2<:FLNormal}= Message(prod!(msg_1.dist, msg_3.dist))
+ruleSPEqualityFLNormal(msg_1::Nothing, msg_2::Message{F1}, msg_3::Message{F2}) where {F1<:FLNormal, F2<:FLNormal} = Message(prod!(msg_2.dist, msg_3.dist))
 
 # ruleSPEqualityGammaWishart(msg_1::Message{F}, msg_2::Message{F}, msg_3::Nothing) where F<:Union{Gamma, Wishart} = Message(prod!(msg_1.dist, msg_2.dist))
 # ruleSPEqualityGammaWishart(msg_1::Message{F}, msg_2::Nothing, msg_3::Message{F}) where F<:Union{Gamma, Wishart}= Message(prod!(msg_1.dist, msg_3.dist))

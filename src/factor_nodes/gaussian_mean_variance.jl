@@ -20,14 +20,14 @@ abstract type FLNormal <: ContinuousUnivariateDistribution end
 struct NormalMV <: FLNormal
     m::Float64
     V::Float64
+    function NormalMV(m::Float64, V::Float64; check_args=false)
+        if check_args
+            V > 0.0 || error("Variance has to be positive")
+        end
+        return new(m, V)
+    end    
 end
 
-function NormalMV(m::Float64, V::Float64; check_args=false)
-    if check_args
-        V > 0.0 || error("Variance has to be positive")
-    end
-    return NormalMV(m, V)
-end
 
 mean(dist::NormalMV) = dist.m
 var(dist::NormalMV) = dist.V

@@ -13,9 +13,9 @@ function matchPermutedCanonical(input_types::Vector{Type}, outbound_type::Type)
     return (nothing_inputs == 1) && (message_inputs == 2)
 end
 
-mutable struct SPEqualityGaussian <: SumProductRule{Equality} end
-outboundType(::Type{SPEqualityGaussian}) = Message{NormalWMP}
-isApplicable(::Type{SPEqualityGaussian}, input_types::Vector{Type}) = matchPermutedCanonical(input_types, Message{FLNormal})
+mutable struct SPEqualityFLNormal <: SumProductRule{Equality} end
+outboundType(::Type{SPEqualityFLNormal}) = Message{NormalWMP}
+isApplicable(::Type{SPEqualityFLNormal}, input_types::Vector{Type}) = matchPermutedCanonical(input_types, Message{FLNormal})
 
 mutable struct SPEqualityGammaWishart <: SumProductRule{Equality} end
 outboundType(::Type{SPEqualityGammaWishart}) = Message{Union{Gamma, Wishart}}
