@@ -14,8 +14,8 @@ function matchPermutedCanonical(input_types::Vector{Type}, outbound_type::Type)
 end
 
 mutable struct SPEqualityGaussian <: SumProductRule{Equality} end
-outboundType(::Type{SPEqualityGaussian}) = Message{GaussianWeightedMeanPrecision}
-isApplicable(::Type{SPEqualityGaussian}, input_types::Vector{Type}) = matchPermutedCanonical(input_types, Message{Gaussian})
+outboundType(::Type{SPEqualityGaussian}) = Message{NormalWMP}
+isApplicable(::Type{SPEqualityGaussian}, input_types::Vector{Type}) = matchPermutedCanonical(input_types, Message{FLNormal})
 
 mutable struct SPEqualityGammaWishart <: SumProductRule{Equality} end
 outboundType(::Type{SPEqualityGammaWishart}) = Message{Union{Gamma, Wishart}}
@@ -46,7 +46,7 @@ function isApplicable(::Type{SPEqualityPointMass}, input_types::Vector{Type})
     for input_type in input_types
         if input_type == Nothing
             nothing_inputs += 1
-        elseif matches(input_type, Message{SoftFactor})
+        elseif matches(input_type, Message{Distribution})
             soft_inputs += 1
         elseif matches(input_type, Message{PointMass})
             point_mass_inputs += 1
@@ -56,26 +56,26 @@ function isApplicable(::Type{SPEqualityPointMass}, input_types::Vector{Type})
     return (nothing_inputs == 1) && (soft_inputs == 1) && (point_mass_inputs == 1)
 end
 
-mutable struct SPEqualityRGMP <: SumProductRule{Equality} end
-outboundType(::Type{SPEqualityRGMP}) = Message{Function}
-isApplicable(::Type{SPEqualityRGMP}, input_types::Vector{Type}) = matchPermutedCanonical(input_types, Message{Function})
+# mutable struct SPEqualityRGMP <: SumProductRule{Equality} end
+# outboundType(::Type{SPEqualityRGMP}) = Message{Function}
+# isApplicable(::Type{SPEqualityRGMP}, input_types::Vector{Type}) = matchPermutedCanonical(input_types, Message{Function})
 
-mutable struct SPEqualityGaussianRGMP <: SumProductRule{Equality} end
-outboundType(::Type{SPEqualityGaussianRGMP}) = Message{GaussianMeanVariance}
-function isApplicable(::Type{SPEqualityGaussianRGMP}, input_types::Vector{Type})
-    nothing_inputs = 0
-    function_inputs = 0
-    gaussian_inputs = 0
+# mutable struct SPEqualityGaussianRGMP <: SumProductRule{Equality} end
+# outboundType(::Type{SPEqualityGaussianRGMP}) = Message{GaussianMeanVariance}
+# function isApplicable(::Type{SPEqualityGaussianRGMP}, input_types::Vector{Type})
+#     nothing_inputs = 0
+#     function_inputs = 0
+#     gaussian_inputs = 0
 
-    for input_type in input_types
-        if input_type == Nothing
-            nothing_inputs += 1
-        elseif matches(input_type, Message{Function})
-            function_inputs += 1
-        elseif matches(input_type, Message{Gaussian})
-            gaussian_inputs += 1
-        end
-    end
+#     for input_type in input_types
+#         if input_type == Nothing
+#             nothing_inputs += 1
+#         elseif matches(input_type, Message{Function})
+#             function_inputs += 1
+#         elseif matches(input_type, Message{Gaussian})
+#             gaussian_inputs += 1
+#         end
+#     end
 
-    return (nothing_inputs == 1) && (function_inputs == 1) && (gaussian_inputs == 1)
-end
+#     return (nothing_inputs == 1) && (function_inputs == 1) && (gaussian_inputs == 1)
+# end

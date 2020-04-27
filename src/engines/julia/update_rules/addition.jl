@@ -4,8 +4,8 @@ ruleSPAdditionOutNGP,
 # ruleSPAdditionOutNPG,
 # ruleSPAdditionOutNPP,
 # ruleSPAdditionIn1GNG,
-ruleSPAdditionIn1PNG
-# ruleSPAdditionIn1GNP,
+ruleSPAdditionIn1PNG,
+ruleSPAdditionIn1GNP
 # ruleSPAdditionIn1PNP,
 # ruleSPAdditionIn2GGN,
 # ruleSPAdditionIn2PGN,
@@ -46,11 +46,11 @@ ruleSPAdditionIn1PNG
 function ruleSPAdditionOutNGP(  
     msg_out::Nothing,
     msg_in1::Message{F},
-    msg_in2::Message{PointMass}) where {F<:NormalMV}
+    msg_in2::Message{PointMass}) where {F<:FLNormal}
 
-    # d_in1 = convert(ProbabilityDistribution{V, GaussianMeanVariance}, msg_in1.dist)
+    d_in1 = convert(NormalMV, msg_in1.dist)
 
-    Message(NormalMV(msg_in1.dist.m + msg_in2.dist.m, msg_in1.dist.V))
+    Message(NormalMV(d_in1.m + msg_in2.dist.m, d_in1.V))
 end
 
 # function ruleSPAdditionOutNPG(
@@ -77,15 +77,15 @@ end
 #     ruleSPAdditionIn1PNG(msg_out, nothing, msg_in1)
 # end
 
-# function ruleSPAdditionIn1GNP(  
-#     msg_out::Message{F, V},
-#     msg_in1::Nothing,
-#     msg_in2::Message{PointMass, V}) where {F<:Gaussian, V<:Union{Univariate, Multivariate}}
+function ruleSPAdditionIn1GNP(  
+    msg_out::Message{F},
+    msg_in1::Nothing,
+    msg_in2::Message{PointMass}) where {F<:FLNormal}
 
-#     d_out = convert(ProbabilityDistribution{V, GaussianMeanVariance}, msg_out.dist)
+    d_out = convert(NormalMV, msg_out.dist)
 
-#     Message(V, GaussianMeanVariance, m=d_out.params[:m] - msg_in2.dist.params[:m], v=d_out.params[:v])
-# end
+    Message(NormalMV(d_out.m - msg_in2.dist.m, d_out.V))
+end
 
 # function ruleSPAdditionIn2GPN(
 #     msg_out::Message{F, V}, 

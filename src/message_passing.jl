@@ -28,7 +28,7 @@ end
 
 """Special inheritance rules for parametric Message types"""
 matches(::Type{T}, ::Type{T}) where T<:Message = true
-matches(Ta::Type{Message{Da}}, Tb::Type{Message{Db}}) where {Da<:Distribution, Db<:Distribution} = (Fa<:Fb)
+matches(Ta::Type{Message{Da}}, Tb::Type{Message{Db}}) where {Da<:Distribution, Db<:Distribution} = (Da<:Db)
 matches(::Type{P}, ::Type{M}) where {P<:Distribution, M<:Message} = false
 matches(::Type{M}, ::Type{P}) where {P<:Distribution, M<:Message} = false
 matches(::Type{Nothing}, ::Type{T}) where T<:Message = false

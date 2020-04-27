@@ -1,4 +1,4 @@
-export NormalMV, NormalWMP, NormalMP, prod!
+export NormalMV, NormalWMP, NormalMP, prod!, convert
 
 """
 Description:
@@ -17,37 +17,47 @@ Construction:
 
     GaussianMeanVariance(out, m, v, id=:some_id)
 """
-struct NormalMV <: ContinuousUnivariateDistribution
+abstract type FLNormal <: ContinuousUnivariateDistribution end
+
+struct NormalMV <: FLNormal
     m::Float64
     V::Float64
 end
 
-struct NormalWMP <: ContinuousUnivariateDistribution
+struct NormalWMP <: FLNormal
     xi::Float64
     w::Float64
 end
 
-struct NormalMP <: ContinuousUnivariateDistribution
+struct NormalMP <: FLNormal
     m::Float64
     T::Float64
 end
 
-function convert(::NormalWMP, dist::NormalMV)
+function convert(::Type{NormalWMP}, dist::NormalMV)
     w = cholinv(dist.V)
     xi = w*dist.m
 
-    return NormalMV(xi, w)
+    return NormalWMP(xi, w)
+end
+
+function convert(::Type{NormalMV}, dist::NormalWMP)
+    v = cholinv(dist.w)
+    m = v*dist.xi
+
+    return NormalMV(m, v)
 end
 
 weightedMean(x::NormalWMP) = x.xi
 precision(x::NormalWMP) = x.w
+
 mean(x::NormalWMP) = cholinv(x.w)*x.xi
 var(x::NormalWMP) =  1.0/x.w
 
 function prod!(
-    x::NormalMV,
-    y::NormalMV,
-    z::NormalWMP=NormalWMP(0.0, 1.0))
+    x::D1,
+    y::D2,
+    z::NormalWMP=NormalWMP(0.0, 1.0)) where {D1<:FLNormal, D2<:FLNormal}
 
     return NormalWMP(weightedMean(x) + weightedMean(y), precision(x) + precision(y))
 end

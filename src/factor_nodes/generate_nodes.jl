@@ -34,7 +34,24 @@ function generateCodeForDistribution(dist::Type{<:Distribution})
     eval(Meta.parse("export $(name)Node"))
 end
 
-distribution_types = subtypes(Distribution)
+function nonabstractsubtypes(datatype::Type)
+    leafs = []
+    stack = Type[datatype]
+    # push!(stack, datatype)
+    while !isempty(stack)
+        for T in subtypes(pop!(stack))
+            if !isabstracttype(T)
+                push!(leafs, T)
+            else
+                push!(stack, T)
+            end
+        end
+    end
+
+    return leafs
+end
+
+distribution_types = nonabstractsubtypes(Distribution)
 
 for distribution in distribution_types
     try 
