@@ -1,3 +1,23 @@
+@sumProductRule(:node_type     => Addition,
+                :outbound_type => Message{NormalMV},
+                :inbound_types => (Nothing, Message{FLNormal}, Message{PointMass}),
+                :name          => SPAdditionOutNGP)
+
+@sumProductRule(:node_type     => Addition,
+                :outbound_type => Message{NormalMV},
+                :inbound_types => (Message{PointMass}, Nothing, Message{NormalMV}),
+                :name          => SPAdditionIn1PNG)
+
+@sumProductRule(:node_type     => Addition,
+                :outbound_type => Message{NormalMV},
+                :inbound_types => (Message{FLNormal}, Nothing, Message{PointMass}),
+                :name          => SPAdditionIn1GNP)
+
+# @sumProductRule(:node_type     => Addition,
+#                 :outbound_type => Message{GaussianMeanVariance},
+#                 :inbound_types => (Nothing, Message{PointMass}, Message{Gaussian}),
+#                 :name          => SPAdditionOutNPG)
+
 # @sumProductRule(:node_type     => Addition,
 #                 :outbound_type => Message{GaussianMeanVariance},
 #                 :inbound_types => (Nothing, Message{Gaussian}, Message{Gaussian}),
@@ -12,26 +32,6 @@
 #                 :outbound_type => Message{GaussianMeanVariance},
 #                 :inbound_types => (Message{Gaussian}, Nothing, Message{Gaussian}),
 #                 :name          => SPAdditionIn1GNG)
-
-@sumProductRule(:node_type     => Addition,
-                :outbound_type => Message{NormalMV},
-                :inbound_types => (Nothing, Message{FLNormal}, Message{PointMass}),
-                :name          => SPAdditionOutNGP)
-
-# @sumProductRule(:node_type     => Addition,
-#                 :outbound_type => Message{GaussianMeanVariance},
-#                 :inbound_types => (Nothing, Message{PointMass}, Message{Gaussian}),
-#                 :name          => SPAdditionOutNPG)
-
-@sumProductRule(:node_type     => Addition,
-                :outbound_type => Message{NormalMV},
-                :inbound_types => (Message{PointMass}, Nothing, Message{NormalMV}),
-                :name          => SPAdditionIn1PNG)
-
-@sumProductRule(:node_type     => Addition,
-                :outbound_type => Message{NormalMV},
-                :inbound_types => (Message{FLNormal}, Nothing, Message{PointMass}),
-                :name          => SPAdditionIn1GNP)
 
 # @sumProductRule(:node_type     => Addition,
 #                 :outbound_type => Message{GaussianMeanVariance},

@@ -44,7 +44,8 @@ Automatically generate a unique id based on the current counter value for the el
 """
 function generateId(t::Type)
     graph = currentGraph()
-    tname = lowercase(split(string(t.name),'.')[end]) # Remove module prefix from typename
+    # tname = lowercase(split(string(t.name),'.')[end]) # Remove module prefix from typename
+    tname = string(nameof(t))
     counter = haskey(graph.counters, tname) ? graph.counters[tname]+1 : 1
     id = Symbol("$(tname)_$(counter)")
 

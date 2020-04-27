@@ -1,7 +1,12 @@
 @sumProductRule(:node_type     => NormalMVNode,
                 :outbound_type => Message{NormalMV},
                 :inbound_types => (Nothing, Message{PointMass}, Message{PointMass}),
-                :name          => SPGaussianMeanVarianceOutNPP)
+                :name          => SPNormalMVOutNPP)
+
+@sumProductRule(:node_type     => NormalNode,
+                :outbound_type => Message{NormalMV},
+                :inbound_types => (Nothing, Message{PointMass}, Message{PointMass}),
+                :name          => SPNormalOutNPP)
 
 # @sumProductRule(:node_type     => GaussianMeanVariance,
 #                 :outbound_type => Message{GaussianMeanVariance},

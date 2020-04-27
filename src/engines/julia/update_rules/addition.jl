@@ -13,6 +13,34 @@ ruleSPAdditionIn1GNP
 # ruleSPAdditionIn2PPN,
 # ruleMAdditionNGG
 
+function ruleSPAdditionOutNGP(  
+    msg_out::Nothing,
+    msg_in1::Message{F},
+    msg_in2::Message{PointMass}) where {F<:FLNormal}
+
+    d_in1 = convert(NormalMV, msg_in1.dist)
+
+    Message(NormalMV(d_in1.m + msg_in2.dist.m, d_in1.V))
+end
+
+function ruleSPAdditionIn1PNG(  
+    msg_out::Message{PointMass},
+    msg_in1::Nothing,
+    msg_in2::Message{NormalMV})
+
+    Message(NormalMV(msg_out.dist.m - msg_in2.dist.m, msg_in2.dist.V))
+end
+
+function ruleSPAdditionIn1GNP(  
+    msg_out::Message{F},
+    msg_in1::Nothing,
+    msg_in2::Message{PointMass}) where {F<:FLNormal}
+
+    d_out = convert(NormalMV, msg_out.dist)
+
+    Message(NormalMV(d_out.m - msg_in2.dist.m, d_out.V))
+end
+
 # function ruleSPAdditionOutNGG(
 #     msg_out::Nothing,
 #     msg_in1::Message{F1, V},
@@ -43,15 +71,6 @@ ruleSPAdditionIn1GNP
 #     ruleSPAdditionIn2GGN(msg_out, msg_in2, nothing)
 # end
 
-function ruleSPAdditionOutNGP(  
-    msg_out::Nothing,
-    msg_in1::Message{F},
-    msg_in2::Message{PointMass}) where {F<:FLNormal}
-
-    d_in1 = convert(NormalMV, msg_in1.dist)
-
-    Message(NormalMV(d_in1.m + msg_in2.dist.m, d_in1.V))
-end
 
 # function ruleSPAdditionOutNPG(
 #     ::Nothing, 
@@ -61,14 +80,6 @@ end
 #     ruleSPAdditionOutNGP(nothing, msg_in2, msg_in1)
 # end
 
-function ruleSPAdditionIn1PNG(  
-    msg_out::Message{PointMass},
-    msg_in1::Nothing,
-    msg_in2::Message{NormalMV})
-
-    Message(NormalMV(msg_out.dist.m - msg_in2.dist.m, msg_in2.dist.V))
-end
-
 # function ruleSPAdditionIn2PGN(
 #     msg_out::Message{PointMass, V}, 
 #     msg_in1::Message{F, V}, 
@@ -76,16 +87,6 @@ end
     
 #     ruleSPAdditionIn1PNG(msg_out, nothing, msg_in1)
 # end
-
-function ruleSPAdditionIn1GNP(  
-    msg_out::Message{F},
-    msg_in1::Nothing,
-    msg_in2::Message{PointMass}) where {F<:FLNormal}
-
-    d_out = convert(NormalMV, msg_out.dist)
-
-    Message(NormalMV(d_out.m - msg_in2.dist.m, d_out.V))
-end
 
 # function ruleSPAdditionIn2GPN(
 #     msg_out::Message{F, V}, 

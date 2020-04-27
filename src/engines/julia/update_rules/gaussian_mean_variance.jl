@@ -1,5 +1,6 @@
 export
-ruleSPGaussianMeanVarianceOutNPP
+ruleSPNormalMVOutNPP,
+ruleSPNormalOutNPP
 # ruleSPGaussianMeanVarianceMPNP,
 # ruleSPGaussianMeanVarianceOutNGP, 
 # ruleSPGaussianMeanVarianceMGNP, 
@@ -8,13 +9,18 @@ ruleSPGaussianMeanVarianceOutNPP
 # ruleVBGaussianMeanVarianceM,
 # ruleVBGaussianMeanVarianceOut
 
-ruleSPGaussianMeanVarianceOutNPP(msg_out::Nothing,
+ruleSPNormalMVOutNPP(msg_out::Nothing,
                                     msg_mean::Message{PointMass},
                                     msg_var::Message{PointMass}) =
     Message(NormalMV(deepcopy(msg_mean.dist.m), deepcopy(msg_var.dist.m)))
 
 ruleSPGaussianMeanVarianceMPNP(msg_out::Message{PointMass}, msg_mean::Nothing, msg_var::Message{PointMass}) =
     ruleSPGaussianMeanVarianceOutNPP(msg_mean, msg_out, msg_var)
+
+ruleSPNormalOutNPP(msg_out::Nothing,
+    msg_mean::Message{PointMass},
+    msg_sigma::Message{PointMass}) =
+Message(NormalMV(deepcopy(msg_mean.dist.m), deepcopy(msg_sigma.dist.m)^2))
 
 # function ruleSPGaussianMeanVarianceOutNGP(  msg_out::Nothing,
 #                                             msg_mean::Message{F, V},

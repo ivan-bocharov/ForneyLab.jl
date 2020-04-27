@@ -4,7 +4,7 @@ using Base.Meta: parse
 using Base64: base64encode
 using LinearAlgebra: diag, det, tr, cholesky, pinv, PosDefException
 using SparseArrays: spzeros
-using SpecialFunctions: digamma, erfc, logfactorial, logabsgamma, logabsbeta
+using SpecialFunctions: digamma, erf, erfc, logfactorial, logabsgamma, logabsbeta
 using LinearAlgebra: Diagonal, Hermitian, isposdef, ishermitian, I, tr
 using InteractiveUtils: subtypes
 using Printf: @sprintf
@@ -39,10 +39,10 @@ include("factor_nodes/clamp.jl")
 include("factor_nodes/equality.jl")
 include("factor_nodes/addition.jl")
 include("factor_nodes/multiplication.jl")
-include("factor_nodes/exponential.jl")
+# include("factor_nodes/exponential.jl")
 include("factor_nodes/gaussian_mean_variance.jl")
-# include("factor_nodes/gaussian_mean_precision.jl")
-# include("factor_nodes/gaussian_weighted_mean_precision.jl")
+include("factor_nodes/gaussian_mean_precision.jl")
+include("factor_nodes/gaussian_weighted_mean_precision.jl")
 # include("factor_nodes/gaussian.jl")
 # include("factor_nodes/gamma.jl")
 # include("factor_nodes/log_normal.jl")
