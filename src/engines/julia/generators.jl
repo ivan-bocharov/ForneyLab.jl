@@ -5,13 +5,13 @@ Generate Julia code for message passing
 and optional free energy evaluation
 """
 function algorithmSourceCode(algo::InferenceAlgorithm; free_energy=false)
-    source_code_blocks = Vector{Expr}(undef, length(algo.posterior_factorization.posterior_factors))
+    source_code_blocks = Expr[]
     
-    for (i, pf) in algo.posterior_factorization
-        source_code_blocks[i] = posteriorFactorSourceCode(pf)
+    for (_, pf) in algo.posterior_factorization
+        push!(source_code_blocks, posteriorFactorSourceCode(pf))
     end
 
-    println(source_code_blocks)
+    code = Expr(:block, source_code_blocks...)
 
     # if free_energy
     #     algo_code *= freeEnergySourceCode(algo)
@@ -42,7 +42,7 @@ end
 Generate Julia code for message passing on a single posterior factor
 """
 function posteriorFactorSourceCode(pf::PosteriorFactor)
-    pf_code = Vector{Expr}(undef)
+    pf_code = Expr[]
 
     if pf.optimize
         push!(pf_code, optimizeSourceCode(pf))
@@ -54,15 +54,17 @@ function posteriorFactorSourceCode(pf::PosteriorFactor)
 
     n_entries = length(pf.schedule)
     
-    mp_code = quote
-        function step$(pf.algorithm_id)$(pf.id)!(data::Dict, marginals::Dict=Dict(), messages::Vector{Message}=Array{Message}(undef, $n_entries))
+    func_name = Symbol("step$(pf.algorithm_id)$(pf.id)!")
+
+    mp_code = quote 
+        function $(func_name)(data::Dict, marginals::Dict=Dict(), messages::Vector{Message}=Array{Message}(undef, $n_entries))
             $(scheduleSourceCode(pf.schedule))
             $(marginalTableSourceCode(pf.marginal_table))
             return marginals
         end
     end
 
-    return pf_code
+    return Expr(:block, mp_code, pf_code...)
 end
 
 """
@@ -156,7 +158,7 @@ function scheduleSourceCode(schedule::Schedule)
         inbounds_code = inboundsSourceCode(entry.inbounds)
         schedule_code[i] = 
             quote
-                messages[$(entry.schedule_index)] = rule$(rule_code)($inbounds_code)
+                messages[$(entry.schedule_index)] = rule$(rule_code)($(inbounds_code...))
             end
     end
 
@@ -206,7 +208,7 @@ function vagueSourceCode(entry::ScheduleEntry)
     if dims == ()
         return quote vague($(entry.family)) end
     else
-        return quote vague($(entry.family, $dims) end
+        return quote vague($(entry.family), $dims) end
     end
 
     return vague_code
@@ -248,14 +250,13 @@ function inboundSourceCode(inbound::Dict) # Custom inbound
 end
 
 function inboundSourceCode(inbound::Clamp{V}) where V<:VariateType # Buffer or value inbound
-    dist_or_msg_code = removePrefix(inbound.dist_or_msg)
-    variate_type_code = removePrefix(V)
-
     if isdefined(inbound, :buffer_id)
         # Inbound is read from data buffer
         return clampBufferInboundSourceCode(inbound)
     else
         # Inbound is read from clamp node value
+        dist_or_msg_code = removePrefix(inbound.dist_or_msg)
+        variate_type_code = removePrefix(V)
         return quote
             $dist_or_msg_code($variate_type_code, PointMass, m=$(valueSourceCode(inbound.value)))
         end
@@ -263,6 +264,9 @@ function inboundSourceCode(inbound::Clamp{V}) where V<:VariateType # Buffer or v
 end
 
 function clampBufferInboundSourceCode(inbound::Clamp{V}) where V<:VariateType
+    dist_or_msg_code = removePrefix(inbound.dist_or_msg)
+    variate_type_code = removePrefix(V)
+
     if isdefined(inbound, :buffer_index) && (inbound.buffer_index > 0)
         return quote
             $dist_or_msg_code($variate_type_code, PointMass, m=data[:$(inbound.buffer_id)][$(inbound.buffer_index)])
@@ -271,6 +275,7 @@ function clampBufferInboundSourceCode(inbound::Clamp{V}) where V<:VariateType
         return quote
             $dist_or_msg_code($variate_type_code, PointMass, m=data[:$(inbound.buffer_id)])
         end
+    end
 end
 
 inboundSourceCode(inbound::Number) = inbound
