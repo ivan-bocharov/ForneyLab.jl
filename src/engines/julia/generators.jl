@@ -5,20 +5,20 @@ Generate Julia code for message passing
 and optional free energy evaluation
 """
 function algorithmSourceCode(algo::InferenceAlgorithm; free_energy=false)
-    algo_code = "begin\n\n"
-    for (_, pf) in algo.posterior_factorization
-        algo_code *= posteriorFactorSourceCode(pf)
-        algo_code *= "\n\n"
+    source_code_blocks = Vector{Expr}(undef, length(algo.posterior_factorization.posterior_factors))
+    
+    for (i, pf) in algo.posterior_factorization
+        source_code_blocks[i] = posteriorFactorSourceCode(pf)
     end
 
-    if free_energy
-        algo_code *= freeEnergySourceCode(algo)
-        algo_code *= "\n\n"
-    end
+    println(source_code_blocks)
 
-    algo_code *= "end # block"
+    # if free_energy
+    #     algo_code *= freeEnergySourceCode(algo)
+    #     algo_code *= "\n\n"
+    # end
 
-    return algo_code
+    # algo_code *= "end # block"
 end
 
 """
@@ -42,24 +42,25 @@ end
 Generate Julia code for message passing on a single posterior factor
 """
 function posteriorFactorSourceCode(pf::PosteriorFactor)
-    pf_code = ""
+    pf_code = Vector{Expr}(undef)
+
     if pf.optimize
-        pf_code *= optimizeSourceCode(pf)
-        pf_code *= "\n\n"
+        push!(pf_code, optimizeSourceCode(pf))
     end
 
     if pf.initialize
-        pf_code *= initializationSourceCode(pf)
-        pf_code *= "\n\n"
+        push!(pf_code, initializationSourceCode(pf))
     end
 
     n_entries = length(pf.schedule)
-    pf_code *= "function step$(pf.algorithm_id)$(pf.id)!(data::Dict, marginals::Dict=Dict(), messages::Vector{Message}=Array{Message}(undef, $n_entries))\n\n"
-    pf_code *= scheduleSourceCode(pf.schedule)
-    pf_code *= "\n"
-    pf_code *= marginalTableSourceCode(pf.marginal_table)
-    pf_code *= "return marginals\n\n"
-    pf_code *= "end"
+    
+    mp_code = quote
+        function step$(pf.algorithm_id)$(pf.id)!(data::Dict, marginals::Dict=Dict(), messages::Vector{Message}=Array{Message}(undef, $n_entries))
+            $(scheduleSourceCode(pf.schedule))
+            $(marginalTableSourceCode(pf.marginal_table))
+            return marginals
+        end
+    end
 
     return pf_code
 end
@@ -68,36 +69,38 @@ end
 Generate template code for optimize block
 """
 function optimizeSourceCode(pf::PosteriorFactor)
-    optim_code =  "# You have created an algorithm that requires updates for (a) clamped parameter(s).\n"
-    optim_code *= "# This algorithm requires the definition of a custom `optimize!` function that updates the parameter value(s)\n"
-    optim_code *= "# by altering the `data` dictionary in-place. The custom `optimize!` function may be based on the mockup below:\n\n"
-    optim_code *= "# function optimize$(pf.algorithm_id)$(pf.id)!(data::Dict, marginals::Dict=Dict(), messages::Vector{Message}=init$(pf.algorithm_id)$(pf.id)())\n"
-    optim_code *= "# \t...\n"
-    optim_code *= "# \treturn data\n"
-    optim_code *= "# end"
+    # optim_code =  "# You have created an algorithm that requires updates for (a) clamped parameter(s).\n"
+    # optim_code *= "# This algorithm requires the definition of a custom `optimize!` function that updates the parameter value(s)\n"
+    # optim_code *= "# by altering the `data` dictionary in-place. The custom `optimize!` function may be based on the mockup below:\n\n"
+    # optim_code *= "# function optimize$(pf.algorithm_id)$(pf.id)!(data::Dict, marginals::Dict=Dict(), messages::Vector{Message}=init$(pf.algorithm_id)$(pf.id)())\n"
+    # optim_code *= "# \t...\n"
+    # optim_code *= "# \treturn data\n"
+    # optim_code *= "# end"
 
-    return optim_code
+    # return optim_code
+    return Expr(:block)
 end
 
 """
 Generate code for initialization block (if required)
 """
 function initializationSourceCode(pf::PosteriorFactor)
-    init_code = "function init$(pf.algorithm_id)$(pf.id)()\n\n"
+    # init_code = "function init$(pf.algorithm_id)$(pf.id)()\n\n"
 
-    n_messages = length(pf.schedule)
+    # n_messages = length(pf.schedule)
 
-    init_code *= "messages = Array{Message}(undef, $n_messages)\n\n"
+    # init_code *= "messages = Array{Message}(undef, $n_messages)\n\n"
 
-    for entry in pf.schedule
-        if entry.initialize
-            init_code *= "messages[$(entry.schedule_index)] = Message($(vagueSourceCode(entry)))\n"
-        end
-    end
-    init_code *= "\nreturn messages\n\n"
-    init_code *= "end"
+    # for entry in pf.schedule
+    #     if entry.initialize
+    #         init_code *= "messages[$(entry.schedule_index)] = Message($(vagueSourceCode(entry)))\n"
+    #     end
+    # end
+    # init_code *= "\nreturn messages\n\n"
+    # init_code *= "end"
 
-    return init_code
+    # return init_code
+    return Expr(:block)
 end
 
 """
@@ -146,11 +149,15 @@ end
 Construct code for message updates
 """
 function scheduleSourceCode(schedule::Schedule)
-    schedule_code = ""
-    for entry in schedule
+    schedule_code = Vector{Expr}(undef, length(schedule))
+    
+    for (i, entry) in enumerate(schedule)
         rule_code = removePrefix(entry.message_update_rule)
         inbounds_code = inboundsSourceCode(entry.inbounds)
-        schedule_code *= "messages[$(entry.schedule_index)] = rule$(rule_code)($inbounds_code)\n"
+        schedule_code[i] = 
+            quote
+                messages[$(entry.schedule_index)] = rule$(rule_code)($inbounds_code)
+            end
     end
 
     return schedule_code
@@ -160,26 +167,35 @@ end
 Generate code for marginal updates
 """
 function marginalTableSourceCode(table::MarginalTable)
-    table_code = ""
-    for entry in table
-        table_code *= "marginals[:$(entry.marginal_id)] = "
-        if entry.marginal_update_rule == Nothing
-            inbound = entry.inbounds[1]
-            table_code *= "messages[$(inbound.schedule_index)].dist"
-        elseif entry.marginal_update_rule == Product
-            inbound1 = entry.inbounds[1]
-            inbound2 = entry.inbounds[2]
-            table_code *= "messages[$(inbound1.schedule_index)].dist * messages[$(inbound2.schedule_index)].dist"
-        else
-            rule_code = removePrefix(entry.marginal_update_rule)
-            inbounds_code = inboundsSourceCode(entry.inbounds)
-            table_code *= "rule$(rule_code)($inbounds_code)"
-        end
-        table_code *= "\n"
+    table_code = Vector{Expr}(undef, length(table))
+    
+    for (i, entry) in enumerate(table)
+        table_code[i] = marginalEntrySourceCode(entry)
     end
-    isempty(table_code) || (table_code *= "\n")
+    
+    return Expr(:block, table_code...)
+end
 
-    return table_code
+# Should this be dispatched on the rule type?
+function marginalEntrySourceCode(entry::MarginalEntry)
+    if entry.marginal_update_rule == Nothing
+        inbound = entry.inbounds[1]
+        return quote
+            marginals[:$(entry.marginal_id)] = messages[$(inbound.schedule_index)].dist
+        end 
+    elseif entry.marginal_update_rule == Product
+        inbound1 = entry.inbounds[1]
+        inbound2 = entry.inbounds[2]
+        return quote
+            marginals[:$(entry.marginal_id)] = messages[$(inbound1.schedule_index)].dist * messages[$(inbound2.schedule_index)].dist
+        end
+    else
+        rule_code = removePrefix(entry.marginal_update_rule)
+        inbounds_code = inboundsSourceCode(entry.inbounds)
+        return quote
+            marginals[:$(entry.marginal_id)] =  rule$(rule_code)($inbounds_code)
+        end
+    end
 end
 
 """
