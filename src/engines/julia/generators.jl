@@ -193,7 +193,7 @@ function marginalEntrySourceCode(entry::MarginalEntry)
         rule_code = removePrefix(entry.marginal_update_rule)
         inbounds_code = inboundsSourceCode(entry.inbounds)
         return quote
-            marginals[:$(entry.marginal_id)] =  rule$(rule_code)($inbounds_code)
+            marginals[:$(entry.marginal_id)] =  rule$(rule_code)($inbounds_code...)
         end
     end
 end
@@ -202,12 +202,11 @@ end
 Generate code for vague initializations
 """
 function vagueSourceCode(entry::ScheduleEntry)
-    family_code = removePrefix(entry.family)
     dims = entry.dimensionality
     if dims == ()
-        vague_code = "vague($family_code)"
+        return quote vague($(entry.family)) end
     else
-        vague_code = "vague($family_code, $dims)"
+        return quote vague($(entry.family, $dims) end
     end
 
     return vague_code
@@ -217,19 +216,19 @@ end
 Generate code for message/marginal/energy/entropy computation inbounds
 """
 function inboundsSourceCode(inbounds::Vector)
-    inbounds_code = String[]
+    inbounds_code = Expr[]
     for inbound in inbounds
         push!(inbounds_code, inboundSourceCode(inbound))
     end
-    return join(inbounds_code, ", ")
+    return inbounds_code
 end
 
 """
 Generate code for a single inbound (overloaded for specific inbound type)
 """
-inboundSourceCode(inbound::Nothing) = "nothing"
-inboundSourceCode(inbound::ScheduleEntry) = "messages[$(inbound.schedule_index)]"
-inboundSourceCode(inbound::MarginalEntry) = "marginals[:$(inbound.marginal_id)]"
+inboundSourceCode(inbound::Nothing) = quote nothing end
+inboundSourceCode(inbound::ScheduleEntry) = quote messages[$(inbound.schedule_index)] end
+inboundSourceCode(inbound::MarginalEntry) = quote marginals[:$(inbound.marginal_id)] end
 function inboundSourceCode(inbound::Dict) # Custom inbound
     keyword_flag = true # Default includes keyword in custom argument
     if haskey(inbound, :keyword)
@@ -240,52 +239,57 @@ function inboundSourceCode(inbound::Dict) # Custom inbound
     for (key, val) in inbound
         if key != :keyword
             if keyword_flag
-                inbound_code = "$(removePrefix(key))=$(removePrefix(val))"
+                return quote $(removePrefix(key))=$(removePrefix(val)) end
             else
-                inbound_code = removePrefix(val)
+                return quote $(removePrefix(val)) end
             end
         end
     end
-
-    return inbound_code
 end
+
 function inboundSourceCode(inbound::Clamp{V}) where V<:VariateType # Buffer or value inbound
     dist_or_msg_code = removePrefix(inbound.dist_or_msg)
     variate_type_code = removePrefix(V)
 
-    inbound_code = "$dist_or_msg_code($variate_type_code, PointMass, m="
     if isdefined(inbound, :buffer_id)
-        # Inbound is read from buffer
-        inbound_code *= "data[:$(inbound.buffer_id)]"
-        if isdefined(inbound, :buffer_index) && (inbound.buffer_index > 0)
-            inbound_code *= "[$(inbound.buffer_index)]"
-        end
+        # Inbound is read from data buffer
+        return clampBufferInboundSourceCode(inbound)
     else
         # Inbound is read from clamp node value
-        inbound_code *= valueSourceCode(inbound.value)
+        return quote
+            $dist_or_msg_code($variate_type_code, PointMass, m=$(valueSourceCode(inbound.value)))
+        end
     end
-    inbound_code *= ")"
-
-    return inbound_code
 end
 
-inboundSourceCode(inbound::Number) = string(inbound)
+function clampBufferInboundSourceCode(inbound::Clamp{V}) where V<:VariateType
+    if isdefined(inbound, :buffer_index) && (inbound.buffer_index > 0)
+        return quote
+            $dist_or_msg_code($variate_type_code, PointMass, m=data[:$(inbound.buffer_id)][$(inbound.buffer_index)])
+        end
+    else
+        return quote
+            $dist_or_msg_code($variate_type_code, PointMass, m=data[:$(inbound.buffer_id)])
+        end
+end
+
+inboundSourceCode(inbound::Number) = inbound
 
 """
 Convert a value to parseable Julia code
 """
-valueSourceCode(val::Union{Vector, Number}) = string(val)
-valueSourceCode(val::Diagonal) = "Diagonal($(val.diag))"
+valueSourceCode(val::Union{Vector, Number}) = val
+valueSourceCode(val::Diagonal) = quote Diagonal($(val.diag)) end
 function valueSourceCode(val::AbstractMatrix)
     # If the dimensionality in at least one direction is 1, a matrix needs to be
     # constructed explicitly; otherwise the output Julia code will construct a vector.
     d = size(val)
     if d == (1,1)
-        val_code = "mat($(val[1]))" # Shorthand notation for a (1,1) matrix reshape
+        val_code = quote mat($(val[1])) end # Shorthand notation for a (1,1) matrix reshape
     elseif 1 in d
-        val_code = "reshape($(vec(val)), $d)" # Explicit reshape
+        val_code = quote reshape($(vec(val)), $d) end # Explicit reshape
     else
-        val_code = string(val)
+        val_code = val
     end
 
     return val_code
@@ -295,6 +299,6 @@ end
 Remove module prefixes from types and functions
 """
 removePrefix(arg::Any) = arg # Do not remove prefix in general
-removePrefix(num::Number) = string(num)
-removePrefix(type::Type) = split(string(type), '.')[end]
-removePrefix(func::Function) = split(string(func), '.')[end]
+# removePrefix(num::Number) = num
+# removePrefix(type::Type) = t(string(type), '.')[end]
+# removePrefix(func::Function) = split(string(func), '.')[end]
