@@ -1,5 +1,5 @@
 export algorithmSourceCode
-
+using MacroTools: postwalk, rmlines, prettify
 """
 Generate Julia code for message passing
 and optional free energy evaluation
@@ -12,13 +12,14 @@ function algorithmSourceCode(algo::InferenceAlgorithm; free_energy=false)
     end
 
     code = Expr(:block, source_code_blocks...)
-
     # if free_energy
     #     algo_code *= freeEnergySourceCode(algo)
     #     algo_code *= "\n\n"
     # end
 
     # algo_code *= "end # block"
+    
+    return postwalk(rmlines, code)
 end
 
 """
@@ -58,7 +59,7 @@ function posteriorFactorSourceCode(pf::PosteriorFactor)
 
     mp_code = quote 
         function $(func_name)(data::Dict, marginals::Dict=Dict(), messages::Vector{Message}=Array{Message}(undef, $n_entries))
-            $(scheduleSourceCode(pf.schedule))
+            $(scheduleSourceCode(pf.schedule)...)
             $(marginalTableSourceCode(pf.marginal_table))
             return marginals
         end
@@ -183,19 +184,19 @@ function marginalEntrySourceCode(entry::MarginalEntry)
     if entry.marginal_update_rule == Nothing
         inbound = entry.inbounds[1]
         return quote
-            marginals[:$(entry.marginal_id)] = messages[$(inbound.schedule_index)].dist
+            marginals[$(Meta.quot(entry.marginal_id))] = messages[$(inbound.schedule_index)].dist
         end 
     elseif entry.marginal_update_rule == Product
         inbound1 = entry.inbounds[1]
         inbound2 = entry.inbounds[2]
         return quote
-            marginals[:$(entry.marginal_id)] = messages[$(inbound1.schedule_index)].dist * messages[$(inbound2.schedule_index)].dist
+            marginals[$(Meta.quot(entry.marginal_id))] = messages[$(inbound1.schedule_index)].dist * messages[$(inbound2.schedule_index)].dist
         end
     else
         rule_code = removePrefix(entry.marginal_update_rule)
         inbounds_code = inboundsSourceCode(entry.inbounds)
         return quote
-            marginals[:$(entry.marginal_id)] =  rule$(rule_code)($inbounds_code...)
+            marginals[$(Meta.quot(entry.marginal_id))] =  rule$(rule_code)($inbounds_code...)
         end
     end
 end
@@ -269,11 +270,11 @@ function clampBufferInboundSourceCode(inbound::Clamp{V}) where V<:VariateType
 
     if isdefined(inbound, :buffer_index) && (inbound.buffer_index > 0)
         return quote
-            $dist_or_msg_code($variate_type_code, PointMass, m=data[:$(inbound.buffer_id)][$(inbound.buffer_index)])
+            $dist_or_msg_code($variate_type_code, PointMass, m=data[$(Meta.quot(inbound.buffer_id))][$(inbound.buffer_index)])
         end
     else
         return quote
-            $dist_or_msg_code($variate_type_code, PointMass, m=data[:$(inbound.buffer_id)])
+            $dist_or_msg_code($variate_type_code, PointMass, m=data[$(Meta.quot(inbound.buffer_id))])
         end
     end
 end
