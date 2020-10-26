@@ -152,14 +152,14 @@ end
 Construct code for message updates
 """
 function scheduleSourceCode(schedule::Schedule)
-    schedule_code = Vector{Expr}(undef, length(schedule))
     
     for (i, entry) in enumerate(schedule)
-        rule_code = removePrefix(entry.message_update_rule)
+        rule_name = Symbol("rule$(removePrefix(entry.message_update_rule))")
+
         inbounds_code = inboundsSourceCode(entry.inbounds)
         schedule_code[i] = 
             quote
-                messages[$(entry.schedule_index)] = rule$(rule_code)($(inbounds_code...))
+                messages[$(entry.schedule_index)] = $(rule_name)($(inbounds_code...))
             end
     end
 
@@ -231,7 +231,7 @@ Generate code for a single inbound (overloaded for specific inbound type)
 """
 inboundSourceCode(inbound::Nothing) = quote nothing end
 inboundSourceCode(inbound::ScheduleEntry) = quote messages[$(inbound.schedule_index)] end
-inboundSourceCode(inbound::MarginalEntry) = quote marginals[:$(inbound.marginal_id)] end
+inboundSourceCode(inbound::MarginalEntry) = quote marginals[$(Meta.quot(inbound.marginal_id))] end
 function inboundSourceCode(inbound::Dict) # Custom inbound
     keyword_flag = true # Default includes keyword in custom argument
     if haskey(inbound, :keyword)
@@ -306,5 +306,5 @@ Remove module prefixes from types and functions
 """
 removePrefix(arg::Any) = arg # Do not remove prefix in general
 # removePrefix(num::Number) = num
-# removePrefix(type::Type) = t(string(type), '.')[end]
+removePrefix(type::Type) = split(string(type), '.')[end]
 # removePrefix(func::Function) = split(string(func), '.')[end]
